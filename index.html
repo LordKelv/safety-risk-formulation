@@ -139,6 +139,10 @@ details.group[open] > summary::before { transform: rotate(90deg); }
 .opt.on { background: var(--surface-1); outline: 1px solid var(--border); }
 .opt .meta { margin-left: 25px; }
 .note { font-size: 12px; color: var(--text-secondary); margin: 3px 0 0 25px; font-style: italic; }
+.parts { margin: 4px 0 0 25px; padding-left: 8px; border-left: 2px solid var(--grid); }
+.parts .part-lbl { font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-top: 3px; }
+.parts .meta, .parts .note { margin-left: 0; }
+.frow.part .flabel { padding-left: 16px; color: var(--text-secondary); }
 .conflict-note { font-style: normal; border-left: 2px solid var(--critical); padding-left: 6px; }
 
 /* ---------- results ---------- */
@@ -373,6 +377,7 @@ function metaNode(s, extraFlag) {
   else parts.push(el('span', { class: 'badge', text: 'no general-population figure: qualitative' }));
   if (s.est != null) parts.push(el('span', { class: 'badge ' + (s.cmp === 'gp' ? 'gp' : '') }, el('span', { class: 'dot' }), CMP_TEXT[s.cmp] || s.cmp));
   if (s.outcome) parts.push(el('span', { text: s.outcome }));
+  if (s.derived) parts.push(el('span', { class: 'badge', title: 'Calculated from two published estimates, not reported directly', text: 'derived' }));
   if (s.v === 'both') parts.push(el('span', { class: 'badge verify-both', title: 'Figure found independently by both research models', text: 'both sources' }));
   else if (s.v === 'conflict') parts.push(el('span', { class: 'badge conflict', title: s.conflict || 'Research models disagreed', text: 'sources differ' }));
   if (extraFlag) parts.push(el('span', { class: 'badge flag', text: 'red flag' }));
@@ -380,6 +385,7 @@ function metaNode(s, extraFlag) {
   const box = el('div', {}, el('div', { class: 'meta' }, parts));
   if (s.cmpText || s.note) box.append(el('div', { class: 'note', text: [s.cmpText, s.note].filter(Boolean).join(' · ') }));
   if (s.conflict) box.append(el('div', { class: 'note conflict-note', text: '≠ ' + s.conflict }));
+  if (s.parts) box.append(el('div', { class: 'parts' }, s.parts.map(p => el('div', { class: 'part' }, el('div', { class: 'part-lbl', text: p.partLabel }), metaNode(p)))));
   return box;
 }
 
@@ -575,7 +581,7 @@ function renderForest(dom, sel, c) {
     const s = r.stat;
     const inC = inCombined(s), why = exclReason(s);
     const row = el('div', { class: 'frow' + (i === 0 ? ' sep' : ''), tabindex: 0 },
-      el('div', { class: 'flabel' }, r.label, el('br'), el('span', { class: 'cmp', text: `${s.m} ${fmt(s.est)} · ${CMP_TEXT[s.cmp]}${inC ? '' : ' · not in combined'}` })),
+      el('div', { class: 'flabel' }, r.label, el('br'), el('span', { class: 'cmp', text: `${s.m} ${fmt(s.est)}${s.derived ? ' (derived)' : ''} · ${CMP_TEXT[s.cmp]}${inC ? '' : ' · not in combined'}` })),
       rowSvg(w, (svg, x) => {
         if (s.lo != null) {
           svg.append(sv('line', { x1: x(s.lo), x2: x(s.hi), y1: 13, y2: 13, stroke: color, 'stroke-width': 2, 'stroke-linecap': 'round' }));
@@ -586,11 +592,22 @@ function renderForest(dom, sel, c) {
         svg.append(sv('circle', { cx: x(s.est), cy: 13, r: filled ? 5 : 4.5, fill: filled ? color : 'var(--surface-1)', stroke: filled ? 'var(--surface-1)' : color, 'stroke-width': 2 }));
       }));
     attachTip(row, () => ({
-      value: `${s.m} ${fmt(s.est)}${s.lo != null ? `  (95% CI ${fmt(s.lo)}–${fmt(s.hi)})` : ''}`,
+      value: `${s.m} ${fmt(s.est)}${s.lo != null ? `  (${s.derived ? 'approx. ' : ''}95% CI ${fmt(s.lo)}–${fmt(s.hi)})` : ''}`,
       label: r.label, color,
       sub: [CMP_TEXT[s.cmp] + (s.cmpText ? ` (${s.cmpText})` : ''), s.outcome, REFS[s.ref] ? REFS[s.ref].short : '', s.v === 'both' ? 'Same figure from both research sources' : s.v === 'conflict' ? 'Research sources reported different figures' : '', inC ? '' : `Not in combined estimate (${why})`].filter(Boolean).join(' · '),
     }));
     host.append(row);
+    for (const p of s.parts || []) {
+      const prow = el('div', { class: 'frow part', tabindex: 0 },
+        el('div', { class: 'flabel' }, `↳ ${p.partLabel}`, el('br'), el('span', { class: 'cmp', text: `${p.m} ${fmt(p.est)} · ${CMP_TEXT[p.cmp]} · component` })),
+        rowSvg(w, (svg, x) => {
+          svg.append(sv('line', { x1: x(p.lo), x2: x(p.hi), y1: 13, y2: 13, stroke: color, 'stroke-width': 1.5, 'stroke-opacity': 0.6, 'stroke-linecap': 'round' }));
+          svg.append(sv('circle', { cx: x(p.est), cy: 13, r: 3.5, fill: p.cmp === 'gp' ? color : 'var(--surface-1)', stroke: p.cmp === 'gp' ? 'var(--surface-1)' : color, 'stroke-width': 1.5 }));
+        }));
+      attachTip(prow, () => ({ value: `${p.m} ${fmt(p.est)}  (95% CI ${fmt(p.lo)}–${fmt(p.hi)})`, label: p.partLabel, color,
+        sub: [CMP_TEXT[p.cmp] + (p.cmpText ? ` (${p.cmpText})` : ''), p.outcome, REFS[p.ref] ? REFS[p.ref].short : '', 'Component of the derived estimate above'].filter(Boolean).join(' · ') }));
+      host.append(prow);
+    }
   });
   // axis
   const ax = sv('svg', { viewBox: `0 0 ${w} 34`, preserveAspectRatio: 'none', 'aria-hidden': 'true' });
@@ -670,7 +687,8 @@ function renderSide(all) {
   }
 
   const ids = [];
-  for (const [, sel] of all) for (const r of sel) if (r.stat && r.stat.ref && !ids.includes(r.stat.ref)) ids.push(r.stat.ref);
+  const addRef = s => { if (s && s.ref && !ids.includes(s.ref)) ids.push(s.ref); };
+  for (const [, sel] of all) for (const r of sel) { addRef(r.stat); (r.stat && r.stat.parts || []).forEach(addRef); }
   const ol = $('#sel-refs');
   ol.replaceChildren(...ids.map(id => { const R = REFS[id]; return el('li', {}, R ? R.full : id, R && R.url ? ' ' : '', R && R.url ? el('a', { href: R.url, target: '_blank', rel: 'noopener noreferrer', text: 'link' }) : ''); }));
   $('#sel-refs-empty').hidden = ids.length > 0;
@@ -684,7 +702,7 @@ function summaryText(all, combos) {
     lines.push(def.tileLabel.toUpperCase());
     for (const g of def.groups) {
       const items = sel.filter(x => x.group === g.key);
-      lines.push(`  ${g.title}: ${items.length ? items.map(x => x.label + (x.stat && x.stat.est != null ? ` [${x.stat.m} ${fmt(x.stat.est)}, ${CMP_TEXT[x.stat.cmp]}]` : '')).join('; ') : 'none selected'}`);
+      lines.push(`  ${g.title}: ${items.length ? items.map(x => x.label + (x.stat && x.stat.est != null ? ` [${x.stat.m} ${fmt(x.stat.est)}${x.stat.derived ? ' derived' : ''}, ${CMP_TEXT[x.stat.cmp]}]` : '')).join('; ') : 'none selected'}`);
     }
     const fl = sel.filter(x => x.flag);
     if (fl.length) lines.push(`  RED FLAGS: ${fl.map(x => x.flag).join('; ')}`);

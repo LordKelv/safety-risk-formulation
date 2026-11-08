@@ -242,6 +242,20 @@ const B = (m, est, lo, hi, cmp, outcome, ref, extra = {}) => S(m, est, lo, hi, c
 const C = (m, est, lo, hi, cmp, outcome, ref, conflict, extra = {}) => S(m, est, lo, hi, cmp, outcome, ref, Object.assign({ v: 'conflict', conflict }, extra));
 const NUL = (ref, note, outcome) => ({ m: null, est: null, lo: null, hi: null, cmp: null, outcome, ref, note, v: 'one' });
 
+/* C-SSRS levels 4–5: no study gives a general-population RR by C-SSRS level, so chain the
+   any-ideation RR (vs none, general population) with the within-patient increment for intent/plan
+   (vs ideation without intent). Approximate CI assumes the two estimates are independent
+   (log-scale SEs added in quadrature). Outcomes differ (death vs attempt), so it is labeled derived. */
+const IDEATION_INTENT = S('RR', 18.3, 5.0, 67.3, 'gp', 'suicide death', 'favril2023', {
+  derived: true, v: 'both',
+  cmpText: 'derived: 5.6 × 3.26; approximate CI',
+  note: 'Mixes a death outcome (any ideation) with an attempt outcome (intent/plan increment). Posner 2011 did not separate level 4 from level 5, so both share this figure.',
+  parts: [
+    B('RR', 5.6, 3.1, 10.1, 'gp', 'suicide death', 'favril2023', { partLabel: 'Any ideation vs none' }),
+    B('OR', 3.26, 1.02, 10.45, 'clin', 'suicide attempt', 'posner2011', { partLabel: '× intent/plan vs ideation without intent', cmpText: 'suicidal patients without intent (C-SSRS validation cohort)' }),
+  ],
+});
+
 /* ============================== HARM TO SELF ============================== */
 DOMAINS.self = {
   short: 'Self', tileLabel: 'Harm to self (suicide)', chartTitle: 'Harm to self: per-factor association vs general population',
@@ -295,14 +309,14 @@ DOMAINS.self = {
   ] },
   { key: 'acute', title: 'Acute / dynamic', desc: 'recent change & warning signs', items: [
     { id: 'ideation', short: 'Suicidal ideation', label: 'Suicidal ideation (C-SSRS severity, past month)',
-      hint: 'Figure is for any ideation vs none. Within suicidal patients, intent/plan adds further risk: OR 3.26 (1.02–10.45) for attempts (Posner 2011).',
+      hint: 'Levels 1–3 share one figure: the only general-population estimate is for any ideation vs none (RR 5.6), and no study separates these levels. For levels 4–5 that figure is multiplied by the extra risk of intent/plan seen within suicidal patients (OR 3.26; Posner 2011), giving a derived ≈18×.',
       options: [
         { id: 'none', label: 'None', none: true },
         { id: 'passive', label: 'Wish to be dead (passive)', short: 'passive wish to be dead', stat: B('RR', 5.6, 3.1, 10.1, 'gp', 'suicide death', 'favril2023') },
         { id: 'active', label: 'Active thoughts, no method', short: 'active, no method', stat: B('RR', 5.6, 3.1, 10.1, 'gp', 'suicide death', 'favril2023') },
         { id: 'method', label: 'Active with method, no intent', short: 'active with method', stat: B('RR', 5.6, 3.1, 10.1, 'gp', 'suicide death', 'favril2023') },
-        { id: 'intent', label: 'Active with some intent, no plan (C-SSRS 4)', short: 'intent without plan', flag: 'Suicidal intent (C-SSRS level 4)', stat: B('RR', 5.6, 3.1, 10.1, 'gp', 'suicide death', 'favril2023', { note: 'This RR understates intent.' }) },
-        { id: 'plan', label: 'Active with specific plan and intent (C-SSRS 5)', short: 'plan with intent', flag: 'Specific plan with intent (C-SSRS level 5)', stat: B('RR', 5.6, 3.1, 10.1, 'gp', 'suicide death', 'favril2023', { note: 'This RR understates plan with intent.' }) },
+        { id: 'intent', label: 'Active with some intent, no plan (C-SSRS 4)', short: 'intent without plan', flag: 'Suicidal intent (C-SSRS level 4)', stat: IDEATION_INTENT },
+        { id: 'plan', label: 'Active with specific plan and intent (C-SSRS 5)', short: 'plan with intent', flag: 'Specific plan with intent (C-SSRS level 5)', stat: IDEATION_INTENT },
       ] },
     { id: 'recent_attempt', label: 'Attempt, interrupted or aborted attempt in past 3 months', flag: 'Recent suicidal behavior', stat: NUL('posner2011', 'Recency sharply amplifies the lifetime-attempt association; no single general-population figure.', 'suicide death') },
     { id: 'preparations', label: 'Preparatory behavior (note, giving away possessions, rehearsal)', flag: 'Preparatory behavior', stat: S('HR', 2.15, 1.27, 3.62, 'clin', 'suicide death', 'saulnier2025', { cmpText: 'veterans assessed for suicide risk without this item', note: '30-day outcome, adjusted.' }) },
