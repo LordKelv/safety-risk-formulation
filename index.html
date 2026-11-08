@@ -770,7 +770,7 @@ let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() 
 
 /* ---------- static content ---------- */
 $('#frameworks').replaceChildren(...(window.FRAMEWORKS || []).map(f => el('li', {}, el('strong', { text: f.name + ': ' }), f.text + ' ', f.ref ? refNode(f.ref) : '')));
-$('#foot').replaceChildren(window.FOOTER || '', ' ', el('a', { href: 'https://github.com/LordKelv/safety-risk-formulation', target: '_blank', rel: 'noopener noreferrer', text: 'Source and research notes on GitHub' }), '.');
+$('#foot').replaceChildren(window.FOOTER || '', ' ', el('a', { href: 'https://github.com/LordKelv/safety-risk-formulation', target: '_blank', rel: 'noopener noreferrer', text: 'Source and research notes on GitHub' }), ' · ', el('a', { href: 'risk-factors-by-rr.pdf', target: '_blank', rel: 'noopener', text: 'All factors ranked by relative risk (PDF)' }), '.');
 
 buildPanels();
 if (location.hash === '#example') loadExample(); else update();

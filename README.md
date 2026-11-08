@@ -24,6 +24,10 @@ Relative risks are not independent, so multiplying them overstates risk. The app
 
 Figures were researched independently by two AI research agents (Gemini 4 Argon and GPT-6.1 Sol) from peer-reviewed meta-analyses, cohort studies and US national statistics, then reconciled. The raw registers are in [`research/`](research/). All data live in [`data.js`](data.js); every statistic carries its comparator, outcome and source. Verify figures against the cited primary sources before teaching from them.
 
+## Printable summary
+
+[`risk-factors-by-rr.pdf`](risk-factors-by-rr.pdf) lists every factor in the app ranked by relative risk (highest to lowest) for each domain, with 95% CIs, comparator, outcome, source, notes and full references. Rebuild it after editing `data.js` with `python tools/build_pdf.py` (needs Node and WeasyPrint).
+
 ## Run locally
 
 Open `index.html` in a browser. No build step or dependencies.
