@@ -1,0 +1,763 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Teaching tool for suicide and violence risk formulation: chronic, acute, lethal-means and protective factors with published relative risks, confidence intervals and references.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%232a78d6'/%3E%3Cpath d='M8 3v10M3 8h10' stroke='white' stroke-width='2'/%3E%3C/svg%3E">
+<title>Safety Risk Formulation — Suicide & Violence (Teaching Tool)</title>
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7; --surface-1: #fcfcfb; --surface-2: #f3f2ee;
+  --text-primary: #0b0b0b; --text-secondary: #52514e; --text-muted: #6f6d68;
+  --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11,11,11,0.10);
+  --self: #2a78d6; --others: #eb6834;
+  --self-wash: rgba(42,120,214,0.14); --others-wash: rgba(235,104,52,0.14);
+  --critical: #d03b3b; --critical-wash: rgba(208,59,59,0.08);
+  --warning: #fab219; --good: #006300;
+  --link: #1c5cab; --focus: #2a78d6;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface-1: #1a1a19; --surface-2: #232321;
+    --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #9a988f;
+    --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+    --self: #3987e5; --others: #d95926;
+    --self-wash: rgba(57,135,229,0.20); --others-wash: rgba(217,89,38,0.20);
+    --critical: #e66767; --critical-wash: rgba(230,103,103,0.10);
+    --good: #0ca30c; --link: #86b6ef; --focus: #3987e5;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d; --surface-1: #1a1a19; --surface-2: #232321;
+  --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #9a988f;
+  --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+  --self: #3987e5; --others: #d95926;
+  --self-wash: rgba(57,135,229,0.20); --others-wash: rgba(217,89,38,0.20);
+  --critical: #e66767; --critical-wash: rgba(230,103,103,0.10);
+  --good: #0ca30c; --link: #86b6ef; --focus: #3987e5;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--page); color: var(--text-primary);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+a { color: var(--link); }
+a:focus-visible, button:focus-visible, input:focus-visible, .frow:focus-visible, summary:focus-visible {
+  outline: 2px solid var(--focus); outline-offset: 2px;
+}
+button {
+  font: inherit; color: var(--text-primary); background: var(--surface-1);
+  border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; cursor: pointer;
+}
+button:hover { background: var(--surface-2); }
+
+/* ---------- header ---------- */
+header.top {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 10px 20px; background: var(--surface-1); border-bottom: 1px solid var(--border);
+}
+header.top h1 { font-size: 17px; margin: 0; font-weight: 650; }
+.pill-warn {
+  font-size: 12px; padding: 2px 8px; border-radius: 999px;
+  border: 1px solid var(--critical); color: var(--text-primary); background: var(--critical-wash);
+}
+header.top .spacer { flex: 1; }
+
+.disclaimer {
+  margin: 14px 20px 0; padding: 10px 14px; border-radius: 8px;
+  background: var(--surface-1); border: 1px solid var(--border); color: var(--text-secondary); font-size: 13px;
+}
+.disclaimer strong { color: var(--text-primary); }
+
+/* ---------- layout ---------- */
+.layout {
+  display: grid; grid-template-columns: minmax(380px, 5fr) minmax(420px, 6fr);
+  gap: 20px; padding: 16px 20px 40px; align-items: start;
+}
+@media (max-width: 1050px) { .layout { grid-template-columns: 1fr; } .results { position: static !important; max-height: none !important; } }
+.panel { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; }
+.inputs { padding: 0; overflow: hidden; }
+.results { position: sticky; top: 64px; max-height: calc(100vh - 80px); overflow: auto; padding: 16px; }
+
+/* tabs */
+.tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--surface-1); position: sticky; top: 0; }
+.tab {
+  flex: 1; border: 0; border-radius: 0; background: transparent; padding: 12px 10px;
+  font-weight: 600; color: var(--text-secondary); border-bottom: 3px solid transparent;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.tab[aria-selected="true"] { color: var(--text-primary); }
+.tab[data-domain="self"][aria-selected="true"] { border-bottom-color: var(--self); }
+.tab[data-domain="others"][aria-selected="true"] { border-bottom-color: var(--others); }
+.tab .swatch { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.count { font-size: 12px; font-weight: 500; color: var(--text-muted); }
+.domain-panel { padding: 6px 16px 16px; }
+.domain-panel[hidden] { display: none; }
+
+details.group { border-bottom: 1px solid var(--grid); padding: 6px 0; }
+details.group:last-child { border-bottom: 0; }
+details.group > summary {
+  cursor: pointer; list-style: none; padding: 8px 0; font-weight: 650; font-size: 14px;
+  display: flex; align-items: baseline; gap: 8px;
+}
+details.group > summary::-webkit-details-marker { display: none; }
+details.group > summary::before { content: "▸"; color: var(--text-muted); width: 12px; display: inline-block; transition: transform .15s; }
+details.group[open] > summary::before { transform: rotate(90deg); }
+.group-desc { font-weight: 400; font-size: 12px; color: var(--text-muted); }
+
+.item { padding: 8px 8px 8px 8px; margin: 2px 0; border-radius: 8px; border: 1px solid transparent; }
+.item:hover { background: var(--surface-2); }
+.item.on { background: var(--surface-2); border-color: var(--border); }
+.item > label, .opt > label { display: flex; gap: 9px; align-items: flex-start; cursor: pointer; }
+.item input { margin: 3px 0 0; width: 16px; height: 16px; flex: none; accent-color: var(--self); }
+.domain-panel[data-domain="others"] .item input { accent-color: var(--others); }
+.item .name { font-weight: 550; }
+.hint { font-size: 12.5px; color: var(--text-secondary); margin: 2px 0 0 25px; }
+.meta { font-size: 12px; color: var(--text-muted); margin: 3px 0 0 25px; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; }
+.meta .stat { font-variant-numeric: tabular-nums; color: var(--text-primary); font-weight: 600; }
+.meta .ref::before { content: "📄 "; }
+.badge {
+  display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 0 6px; border-radius: 999px;
+  border: 1px solid var(--border); color: var(--text-secondary); white-space: nowrap;
+}
+.badge .dot { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--text-secondary); display: inline-block; }
+.badge.gp .dot { background: var(--text-secondary); }
+.badge.flag { border-color: var(--critical); color: var(--text-primary); }
+.badge.flag::before { content: "⚑"; color: var(--critical); }
+.badge.verify-both::before { content: "✓✓"; color: var(--good); font-weight: 700; }
+.badge.verify-one::before { content: "✓"; color: var(--text-muted); font-weight: 700; }
+.badge.conflict::before { content: "≠"; color: var(--critical); font-weight: 700; }
+.choice .name { margin-left: 0; }
+.choice .opts { margin: 6px 0 0 0; display: grid; gap: 2px; }
+.opt { padding: 4px 6px; border-radius: 6px; }
+.opt.on { background: var(--surface-1); outline: 1px solid var(--border); }
+.opt .meta { margin-left: 25px; }
+.note { font-size: 12px; color: var(--text-secondary); margin: 3px 0 0 25px; font-style: italic; }
+.conflict-note { font-style: normal; border-left: 2px solid var(--critical); padding-left: 6px; }
+
+/* ---------- results ---------- */
+.results h2 { font-size: 15px; margin: 18px 0 8px; }
+.results h2:first-child { margin-top: 0; }
+.results h3 { font-size: 13.5px; margin: 14px 0 6px; }
+.flags { border: 1px solid var(--critical); background: var(--critical-wash); border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; }
+.flags[hidden] { display: none; }
+.flags .ttl { font-weight: 700; display: flex; gap: 6px; align-items: center; }
+.flags .ttl::before { content: "⚑"; color: var(--critical); font-size: 16px; }
+.flags ul { margin: 6px 0 0; padding-left: 20px; }
+
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 560px) { .tiles { grid-template-columns: 1fr; } }
+.tile { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; background: var(--surface-1); position: relative; overflow: hidden; }
+.tile::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+.tile.self::before { background: var(--self); }
+.tile.others::before { background: var(--others); }
+.tile .lbl { font-size: 12.5px; color: var(--text-secondary); }
+.tile .val { font-size: 30px; font-weight: 650; line-height: 1.15; margin: 2px 0; }
+.tile .val small { font-size: 14px; font-weight: 500; color: var(--text-secondary); }
+.tile .sub { font-size: 12px; color: var(--text-muted); }
+.tile .base { font-size: 12px; color: var(--text-secondary); margin-top: 6px; border-top: 1px solid var(--grid); padding-top: 6px; }
+
+.ctrl-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 10px 0 4px; font-size: 13px; }
+.ctrl-row label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--text-secondary); margin: 6px 0; }
+.legend span { display: inline-flex; gap: 5px; align-items: center; }
+
+/* forest plot */
+.forest { margin-top: 4px; }
+.forest .ftitle { display: flex; align-items: center; gap: 8px; font-weight: 650; font-size: 13.5px; margin: 12px 0 4px; }
+.forest .ftitle .swatch { width: 10px; height: 10px; border-radius: 3px; }
+.frow { display: grid; grid-template-columns: 38% 1fr; align-items: center; min-height: 26px; border-radius: 4px; }
+.frow:hover, .frow:focus-visible { background: var(--surface-2); }
+.frow .flabel { font-size: 12.5px; padding: 3px 8px 3px 2px; color: var(--text-primary); line-height: 1.25; }
+.frow .flabel .cmp { color: var(--text-muted); font-size: 11px; }
+.frow.summary .flabel { font-weight: 650; }
+.frow.sep { border-top: 1px solid var(--grid); }
+.frow .plot { position: relative; align-self: stretch; display: flex; align-items: center; }
+.frow .plot svg { display: block; width: 100%; height: 26px; overflow: visible; position: relative; }
+.frow .ref1 { position: absolute; top: 0; bottom: 0; width: 1.5px; margin-left: -0.75px; background: var(--axis); }
+.faxis { display: grid; grid-template-columns: 38% 1fr; }
+.faxis svg { display: block; width: 100%; height: 34px; overflow: visible; }
+.fempty { font-size: 12.5px; color: var(--text-muted); padding: 8px 2px; }
+
+.tablewrap { overflow-x: auto; }
+table.data { border-collapse: collapse; width: 100%; font-size: 12px; margin-top: 6px; }
+table.data th, table.data td { border-bottom: 1px solid var(--grid); padding: 4px 6px; text-align: left; vertical-align: top; }
+table.data td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.unq { font-size: 12.5px; }
+.unq ul { margin: 4px 0; padding-left: 20px; }
+ol.refs { font-size: 12px; padding-left: 22px; color: var(--text-secondary); }
+ol.refs li { margin-bottom: 4px; }
+details.how { border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; margin-top: 10px; font-size: 12.5px; color: var(--text-secondary); }
+details.how summary { cursor: pointer; font-weight: 600; color: var(--text-primary); }
+details.how code { font-size: 12px; }
+.frameworks { font-size: 12.5px; color: var(--text-secondary); }
+.frameworks li { margin-bottom: 4px; }
+
+#tooltip {
+  position: fixed; z-index: 50; pointer-events: none; max-width: 340px;
+  background: var(--surface-1); color: var(--text-primary); border: 1px solid var(--border);
+  box-shadow: 0 6px 24px rgba(0,0,0,.18); border-radius: 8px; padding: 8px 10px; font-size: 12px; display: none;
+}
+#tooltip .tv { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+#tooltip .tk { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 6px; }
+#tooltip .tl { color: var(--text-secondary); }
+#tooltip .ts { color: var(--text-muted); margin-top: 4px; }
+
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+footer.foot { padding: 0 20px 30px; font-size: 12px; color: var(--text-muted); }
+
+@media print {
+  header.top button, .tabs, .ctrl-row button { display: none !important; }
+  .layout { grid-template-columns: 1fr; }
+  .results { position: static; max-height: none; }
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>Safety Risk Formulation: Harm to Self &amp; Others</h1>
+  <span class="pill-warn">Teaching tool · not a prediction instrument</span>
+  <span class="spacer"></span>
+  <button id="btn-example" type="button">Load example case</button>
+  <button id="btn-copy" type="button">Copy formulation summary</button>
+  <button id="btn-reset" type="button">Reset</button>
+  <button id="btn-theme" type="button" aria-label="Toggle dark mode">◐ Theme</button>
+</header>
+
+<div class="disclaimer">
+  <strong>How to read this.</strong> Each factor shows its published association with suicide or violence, the comparison group the figure came from, and its reference.
+  Figures marked <span class="badge gp"><span class="dot"></span>vs general population</span> are compared with people without that factor in the general population;
+  <span class="badge"><span class="dot"></span>vs clinical / subgroup</span> figures come from within already-selected groups (e.g., people with psychosis, abused women) and are not population multipliers.
+  Risk factors predict suicide and violence only slightly better than chance (Franklin et al., 2017), and categorizing patients as "high" or "low" risk misses many people who go on to die (Large et al., 2016).
+  Use this tool to structure a <em>formulation</em> (baseline vulnerability, acute change, access to means, protective factors, plan), never to decide a disposition by a number.
+  Nothing you select is stored or transmitted.
+</div>
+
+<main class="layout">
+  <section class="panel inputs" aria-label="Risk factor selection">
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" id="tab-self" data-domain="self" aria-selected="true" aria-controls="panel-self">
+        <span class="swatch" style="background:var(--self)"></span>Harm to self <span class="count" id="count-self"></span>
+      </button>
+      <button class="tab" role="tab" id="tab-others" data-domain="others" aria-selected="false" aria-controls="panel-others">
+        <span class="swatch" style="background:var(--others)"></span>Harm to others <span class="count" id="count-others"></span>
+      </button>
+    </div>
+    <div class="domain-panel" id="panel-self" data-domain="self" role="tabpanel" aria-labelledby="tab-self"></div>
+    <div class="domain-panel" id="panel-others" data-domain="others" role="tabpanel" aria-labelledby="tab-others" hidden></div>
+  </section>
+
+  <aside class="panel results" aria-label="Results">
+    <div class="flags" id="flags" hidden role="status" aria-live="polite">
+      <div class="ttl">Acute red flags present: these need clinical action regardless of any number</div>
+      <ul id="flag-list"></ul>
+    </div>
+
+    <h2>Compared with the average person in the general population</h2>
+    <div class="tiles">
+      <div class="tile self" id="tile-self"></div>
+      <div class="tile others" id="tile-others"></div>
+    </div>
+
+    <div class="ctrl-row">
+      <label><input type="checkbox" id="opt-clin"> Include clinical/subgroup-comparator factors in the combined estimate (less valid)</label>
+    </div>
+    <div class="legend" aria-hidden="true">
+      <span><svg width="12" height="12"><circle cx="6" cy="6" r="4.5" fill="var(--text-secondary)"/></svg>vs general population</span>
+      <span><svg width="12" height="12"><circle cx="6" cy="6" r="4" fill="var(--surface-1)" stroke="var(--text-secondary)" stroke-width="1.6"/></svg>vs clinical / subgroup comparator</span>
+      <span><svg width="14" height="12"><path d="M7 1 L13 6 L7 11 L1 6 Z" fill="var(--text-secondary)"/></svg>illustrative combined estimate</span>
+      <span><svg width="22" height="12"><rect x="0" y="3" width="22" height="6" rx="3" fill="var(--grid)"/></svg>range: strongest single factor → naive multiplication</span>
+      <span>— 95% CI · log scale</span>
+    </div>
+
+    <div class="forest" id="forest-self"></div>
+    <div class="forest" id="forest-others"></div>
+    <div class="ctrl-row"><button type="button" id="btn-table" aria-expanded="false">Show data table</button></div>
+    <div class="tablewrap" id="table-wrap" hidden></div>
+
+    <details class="how">
+      <summary>How the illustrative combined estimate is calculated</summary>
+      <p>Multiplying relative risks assumes each factor is independent. They are not: depression, hopelessness, insomnia, substance use and prior attempts cluster in the same people, so a naive product badly overstates risk.
+      This tool therefore shows a <strong>range</strong> rather than a point:</p>
+      <ul>
+        <li><strong>Lower end:</strong> the single strongest selected factor alone (as if every other factor were fully redundant).</li>
+        <li><strong>Diamond (central):</strong> factors sorted by strength, each added on the log scale at a geometrically decreasing weight (1, ½, ¼, …), so additional correlated factors add progressively less.</li>
+        <li><strong>Upper end:</strong> the naive product (as if fully independent), shown only to illustrate how much independence assumptions inflate risk. Values are capped at 500×.</li>
+        <li><strong>Protective factors</strong> are discounted the same way and then applied at half weight, reflecting SAFE-T guidance that protective factors do not negate acute risk.</li>
+        <li><strong>Demographic baseline</strong> (sex) is a rate ratio to the overall population and is applied directly.</li>
+        <li>Only factors with general-population comparators are included unless you tick the box above. Factors without a usable figure (e.g., hopelessness, plan with intent, threats) are listed separately and <em>do not lower the number</em>, even though they may matter most clinically.</li>
+      </ul>
+      <p>This damping scheme is a teaching heuristic, not a validated model. Validated multivariable tools exist for narrow populations: OxMIS for suicide in severe mental illness, OxRec for violent reoffending after prison. They cannot be reproduced from pooled odds ratios.</p>
+    </details>
+
+    <div class="unq" id="unq"></div>
+
+    <h2>References for selected factors</h2>
+    <ol class="refs" id="sel-refs"></ol>
+    <p class="fempty" id="sel-refs-empty">Select factors to list their references.</p>
+
+    <h2>Frameworks to structure the assessment</h2>
+    <ul class="frameworks" id="frameworks"></ul>
+  </aside>
+</main>
+
+<footer class="foot" id="foot"></footer>
+<div id="tooltip" role="tooltip"></div>
+
+<script>
+/* ==========================================================================
+   DATA — references and factors.
+   Statistics were researched independently by Gemini 4 Argon and GPT-6.1 Sol
+   and reconciled; see research/ for the source registers.
+   cmp: 'gp'  = compared with people without the factor in the general population
+        'clin'= clinical comparator (e.g., other patients with psychosis)
+        'sub' = selected subgroup comparator (e.g., abused women, decedent controls)
+   v:   'both' = figure found by both models, 'one' = one model, verified by citation check
+   ========================================================================== */
+const REFS = {};
+const DOMAINS = {};
+</script>
+<script src="data.js"></script>
+<script>
+/* ==========================================================================
+   APP
+   ========================================================================== */
+(() => {
+const $ = (s, el = document) => el.querySelector(s);
+const el = (tag, attrs = {}, ...kids) => {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v == null || v === false) continue;
+    if (k === 'class') n.className = v;
+    else if (k === 'text') n.textContent = v;
+    else if (k.startsWith('on')) n.addEventListener(k.slice(2), v);
+    else n.setAttribute(k, v === true ? '' : v);
+  }
+  for (const k of kids.flat()) if (k != null) n.append(k instanceof Node ? k : document.createTextNode(k));
+  return n;
+};
+const fmt = v => v == null ? '—' : (v >= 100 ? Math.round(v).toString() : v >= 10 ? v.toFixed(1).replace(/\.0$/, '') : v >= 1 ? v.toFixed(2).replace(/0$/, '') : v.toFixed(2));
+const fmtX = v => v >= 10 ? Math.round(v).toLocaleString() : v.toFixed(1);
+const CMP_TEXT = { gp: 'vs general population', clin: 'vs clinical comparator', sub: 'vs subgroup comparator' };
+const DOMAIN_COLOR = { self: 'var(--self)', others: 'var(--others)' };
+
+const state = { checks: new Set(), choices: {}, includeClin: false, sex: null };
+
+/* ---------- references ---------- */
+function refNode(refId) {
+  const r = REFS[refId];
+  if (!r) return el('span', { class: 'ref', text: refId });
+  return r.url
+    ? el('a', { class: 'ref', href: r.url, target: '_blank', rel: 'noopener noreferrer', text: r.short })
+    : el('span', { class: 'ref', text: r.short });
+}
+
+function statSummary(s) {
+  if (!s || s.est == null) return null;
+  const ci = s.lo != null ? ` (${fmt(s.lo)}–${fmt(s.hi)})` : '';
+  return `${s.m} ${fmt(s.est)}${ci}`;
+}
+
+function metaNode(s, extraFlag) {
+  const parts = [];
+  if (!s) return null;
+  const sum = statSummary(s);
+  if (sum) parts.push(el('span', { class: 'stat', text: sum }));
+  else parts.push(el('span', { class: 'badge', text: 'no general-population figure: qualitative' }));
+  if (s.est != null) parts.push(el('span', { class: 'badge ' + (s.cmp === 'gp' ? 'gp' : '') }, el('span', { class: 'dot' }), CMP_TEXT[s.cmp] || s.cmp));
+  if (s.outcome) parts.push(el('span', { text: s.outcome }));
+  if (s.v === 'both') parts.push(el('span', { class: 'badge verify-both', title: 'Figure found independently by both research models', text: 'both sources' }));
+  else if (s.v === 'conflict') parts.push(el('span', { class: 'badge conflict', title: s.conflict || 'Research models disagreed', text: 'sources differ' }));
+  if (extraFlag) parts.push(el('span', { class: 'badge flag', text: 'red flag' }));
+  if (s.ref) parts.push(refNode(s.ref));
+  const box = el('div', {}, el('div', { class: 'meta' }, parts));
+  if (s.cmpText || s.note) box.append(el('div', { class: 'note', text: [s.cmpText, s.note].filter(Boolean).join(' · ') }));
+  if (s.conflict) box.append(el('div', { class: 'note conflict-note', text: '≠ ' + s.conflict }));
+  return box;
+}
+
+/* ---------- build input panels ---------- */
+function resolveStat(s) {
+  if (!s) return s;
+  if (s.bySex) return s.bySex[state.sex] || s.bySex.default;
+  return s;
+}
+
+function buildPanels() {
+  for (const [dom, def] of Object.entries(DOMAINS)) {
+    const panel = $(`#panel-${dom}`);
+    panel.replaceChildren();
+    for (const g of def.groups) {
+      const det = el('details', { class: 'group', open: true },
+        el('summary', {}, g.title, el('span', { class: 'group-desc', text: g.desc || '' })));
+      for (const it of g.items) det.append(it.options ? buildChoice(dom, it) : buildCheck(dom, it));
+      panel.append(det);
+    }
+  }
+}
+
+function buildCheck(dom, it) {
+  const id = `${dom}__${it.id}`;
+  const input = el('input', { type: 'checkbox', id, 'data-key': id });
+  input.checked = state.checks.has(id);
+  input.addEventListener('change', () => { input.checked ? state.checks.add(id) : state.checks.delete(id); update(); });
+  const wrap = el('div', { class: 'item' + (input.checked ? ' on' : ''), 'data-wrap': id },
+    el('label', { for: id }, input, el('span', { class: 'name', text: it.label })),
+    it.hint ? el('div', { class: 'hint', text: it.hint }) : null,
+    metaNode(resolveStat(it.stat), !!it.flag));
+  return wrap;
+}
+
+function buildChoice(dom, it) {
+  const name = `${dom}__${it.id}`;
+  const cur = state.choices[name] || it.options[0].id;
+  const opts = el('div', { class: 'opts', role: 'radiogroup', 'aria-label': it.label });
+  for (const o of it.options) {
+    const oid = `${name}__${o.id}`;
+    const input = el('input', { type: 'radio', name, id: oid, value: o.id });
+    input.checked = o.id === cur;
+    input.addEventListener('change', () => {
+      state.choices[name] = o.id;
+      if (it.id === 'sex') syncSex(dom, o.sex || null);
+      update(it.id === 'sex');
+    });
+    opts.append(el('div', { class: 'opt' + (input.checked && o.stat ? ' on' : '') },
+      el('label', { for: oid }, input, el('span', { text: o.label })),
+      o.hint ? el('div', { class: 'hint', text: o.hint }) : null,
+      o.stat ? metaNode(resolveStat(o.stat), !!o.flag) : (o.flag ? el('div', { class: 'meta' }, el('span', { class: 'badge flag', text: 'red flag' })) : null)));
+  }
+  return el('div', { class: 'item choice' },
+    el('div', { class: 'name', text: it.label }),
+    it.hint ? el('div', { class: 'hint', style: 'margin-left:0', text: it.hint }) : null,
+    opts);
+}
+
+/* Sex is one fact about the patient: keep both domains' sex questions in step. */
+function syncSex(fromDom, sex) {
+  state.sex = sex;
+  for (const [d, def] of Object.entries(DOMAINS)) {
+    if (d === fromDom) continue;
+    for (const g of def.groups) for (const it of g.items) {
+      if (it.id !== 'sex' || !it.options) continue;
+      const key = `${d}__sex`;
+      const cur = it.options.find(o => o.id === (state.choices[key] || it.options[0].id));
+      if ((cur && cur.sex || null) !== sex) {
+        const match = it.options.find(o => (o.sex || null) === sex) || it.options[0];
+        state.choices[key] = match.id;
+      }
+    }
+  }
+}
+
+/* ---------- collect selections ---------- */
+function collect(dom) {
+  const out = []; // {label, group, stat, flag, item}
+  for (const g of DOMAINS[dom].groups) {
+    for (const it of g.items) {
+      if (it.options) {
+        const name = `${dom}__${it.id}`;
+        const o = it.options.find(x => x.id === (state.choices[name] || it.options[0].id));
+        if (o && (o.stat || o.flag || !o.none)) {
+          if (o.none) continue;
+          out.push({ label: it.short ? `${it.short}: ${o.short || o.label}` : (o.short || o.label), group: g.key, stat: resolveStat(o.stat), flag: o.flag, demo: it.demo });
+        }
+      } else if (state.checks.has(`${dom}__${it.id}`)) {
+        out.push({ label: it.short || it.label, group: g.key, stat: resolveStat(it.stat), flag: it.flag });
+      }
+    }
+  }
+  return out;
+}
+
+/* ---------- combined estimate ---------- */
+const inCombined = s => !!s && s.est != null && !s.transient && (s.cmp === 'gp' || state.includeClin);
+const exclReason = s => s.transient ? 'hours-long exposure window; not comparable to annual risk' : (s.cmp !== 'gp' && !state.includeClin ? 'not vs general population' : '');
+function combine(sel) {
+  const usable = sel.filter(x => inCombined(x.stat));
+  const logs = arr => arr.map(x => Math.log(x.stat.est));
+  const demo = logs(usable.filter(x => x.demo)).reduce((a, b) => a + b, 0);
+  const risk = logs(usable.filter(x => !x.demo && x.stat.est > 1)).sort((a, b) => b - a);
+  const prot = logs(usable.filter(x => !x.demo && x.stat.est < 1)).sort((a, b) => a - b);
+  const damp = arr => arr.reduce((acc, v, i) => acc + v * Math.pow(0.5, i), 0);
+  const P = 0.5 * damp(prot);
+  const cap = v => Math.min(500, v);
+  const n = usable.length;
+  if (!n) return { n: 0 };
+  return {
+    n,
+    low: cap(Math.exp(demo + (risk[0] || 0) + P)),
+    mid: cap(Math.exp(demo + damp(risk) + P)),
+    high: cap(Math.exp(demo + risk.reduce((a, b) => a + b, 0) + P)),
+    capped: Math.exp(demo + risk.reduce((a, b) => a + b, 0) + P) > 500,
+    nRisk: risk.length, nProt: prot.length,
+  };
+}
+
+/* ---------- tiles ---------- */
+function renderTile(dom, sel, c) {
+  const t = $(`#tile-${dom}`);
+  const def = DOMAINS[dom];
+  t.replaceChildren();
+  t.append(el('div', { class: 'lbl', text: def.tileLabel }));
+  if (!c.n) {
+    t.append(el('div', { class: 'val' }, '1.0×', el('small', { text: ' baseline' })),
+      el('div', { class: 'sub', text: sel.length ? 'Selected factors have no general-population figure (see list below).' : 'No quantified factors selected.' }));
+  } else {
+    t.append(el('div', { class: 'val' }, `${c.mid >= 500 ? '≥' : '≈'}${fmtX(c.mid)}×`, el('small', { text: ' general population' })),
+      el('div', { class: 'sub', text: `Range ${fmtX(c.low)}× – ${c.capped ? '≥' : ''}${fmtX(c.high)}× · from ${c.n} quantified factor${c.n > 1 ? 's' : ''}` }));
+  }
+  const unq = sel.filter(x => !inCombined(x.stat)).length;
+  if (unq) t.append(el('div', { class: 'sub', text: `+ ${unq} selected factor${unq > 1 ? 's' : ''} not in the number` }));
+  t.append(el('div', { class: 'base', text: def.baseline }));
+}
+
+/* ---------- forest plot ---------- */
+const XMIN = 0.05, XMAX = 300;
+const TICKS_ALL = [0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10, 25, 50, 100, 250];
+function xScale(w) {
+  const pad = 10, l0 = Math.log(XMIN), l1 = Math.log(XMAX);
+  return v => pad + (Math.log(Math.min(XMAX, Math.max(XMIN, v))) - l0) / (l1 - l0) * (w - 2 * pad);
+}
+const SVGNS = 'http://www.w3.org/2000/svg';
+const sv = (tag, attrs) => { const n = document.createElementNS(SVGNS, tag); for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v); return n; };
+
+function rowSvg(w, draw) {
+  const s = sv('svg', { viewBox: `0 0 ${w} 26`, 'aria-hidden': 'true' });
+  const x = xScale(w);
+  draw(s, x);
+  const ref = el('div', { class: 'ref1', style: `left:${(x(1) / w * 100).toFixed(3)}%` });
+  return el('div', { class: 'plot' }, ref, s);
+}
+
+function renderForest(dom, sel, c) {
+  const host = $(`#forest-${dom}`);
+  host.replaceChildren();
+  const def = DOMAINS[dom];
+  const color = DOMAIN_COLOR[dom];
+  host.append(el('div', { class: 'ftitle' }, el('span', { class: 'swatch', style: `background:${color}` }), def.chartTitle));
+  const rows = sel.filter(x => x.stat && x.stat.est != null).sort((a, b) => b.stat.est - a.stat.est);
+  // measure width
+  const probe = el('div', { class: 'frow' }, el('div'), el('div'));
+  host.append(probe);
+  const w = Math.max(160, Math.round(probe.children[1].getBoundingClientRect().width || 300));
+  probe.remove();
+
+  // summary rows
+  const pop = el('div', { class: 'frow summary', tabindex: 0 },
+    el('div', { class: 'flabel', text: 'Average person, general population' }),
+    rowSvg(w, (s, x) => { s.append(sv('circle', { cx: x(1), cy: 13, r: 4.5, fill: 'var(--text-secondary)', stroke: 'var(--surface-1)', 'stroke-width': 2 })); }));
+  attachTip(pop, () => ({ value: '1.0×', label: 'General-population reference', color: 'var(--text-secondary)', sub: def.baseline }));
+  host.append(pop);
+
+  const prof = el('div', { class: 'frow summary', tabindex: 0 },
+    el('div', { class: 'flabel' }, 'This profile ', el('span', { class: 'cmp', text: '(illustrative)' })),
+    rowSvg(w, (s, x) => {
+      if (!c.n) { const t = sv('text', { x: x(1) + 8, y: 17, 'font-size': 11, fill: 'var(--text-muted)' }); t.textContent = 'no quantified factors'; s.append(t); return; }
+      s.append(sv('rect', { x: x(c.low), y: 8, width: Math.max(2, x(c.high) - x(c.low)), height: 10, rx: 5, fill: color, 'fill-opacity': 0.22 }));
+      const cx = x(c.mid);
+      s.append(sv('path', { d: `M${cx} 4 L${cx + 8} 13 L${cx} 22 L${cx - 8} 13 Z`, fill: color, stroke: 'var(--surface-1)', 'stroke-width': 2 }));
+    }));
+  if (c.n) attachTip(prof, () => ({ value: `≈${fmtX(c.mid)}×`, label: 'Illustrative combined (damped)', color,
+    sub: `Strongest single factor ${fmtX(c.low)}× · naive product ${c.capped ? '≥' : ''}${fmtX(c.high)}× · ${c.nRisk} risk, ${c.nProt} protective factor(s) included` }));
+  host.append(prof);
+
+  if (!rows.length) {
+    host.append(el('div', { class: 'fempty', text: sel.length ? 'Selected factors have no numeric estimate; see "Not quantified" below.' : 'Select factors on the left to plot them.' }));
+  }
+  rows.forEach((r, i) => {
+    const s = r.stat;
+    const inC = inCombined(s), why = exclReason(s);
+    const row = el('div', { class: 'frow' + (i === 0 ? ' sep' : ''), tabindex: 0 },
+      el('div', { class: 'flabel' }, r.label, el('br'), el('span', { class: 'cmp', text: `${s.m} ${fmt(s.est)} · ${CMP_TEXT[s.cmp]}${inC ? '' : ' · not in combined'}` })),
+      rowSvg(w, (svg, x) => {
+        if (s.lo != null) {
+          svg.append(sv('line', { x1: x(s.lo), x2: x(s.hi), y1: 13, y2: 13, stroke: color, 'stroke-width': 2, 'stroke-linecap': 'round' }));
+          if (s.hi > XMAX) svg.append(sv('path', { d: `M${x(XMAX)} 9 L${x(XMAX) + 6} 13 L${x(XMAX)} 17 Z`, fill: color }));
+          if (s.lo < XMIN) svg.append(sv('path', { d: `M${x(XMIN)} 9 L${x(XMIN) - 6} 13 L${x(XMIN)} 17 Z`, fill: color }));
+        }
+        const filled = s.cmp === 'gp';
+        svg.append(sv('circle', { cx: x(s.est), cy: 13, r: filled ? 5 : 4.5, fill: filled ? color : 'var(--surface-1)', stroke: filled ? 'var(--surface-1)' : color, 'stroke-width': 2 }));
+      }));
+    attachTip(row, () => ({
+      value: `${s.m} ${fmt(s.est)}${s.lo != null ? `  (95% CI ${fmt(s.lo)}–${fmt(s.hi)})` : ''}`,
+      label: r.label, color,
+      sub: [CMP_TEXT[s.cmp] + (s.cmpText ? ` (${s.cmpText})` : ''), s.outcome, REFS[s.ref] ? REFS[s.ref].short : '', s.v === 'both' ? 'Same figure from both research sources' : s.v === 'conflict' ? 'Research sources reported different figures' : '', inC ? '' : `Not in combined estimate (${why})`].filter(Boolean).join(' · '),
+    }));
+    host.append(row);
+  });
+  // axis
+  const ax = sv('svg', { viewBox: `0 0 ${w} 34`, preserveAspectRatio: 'none', 'aria-hidden': 'true' });
+  const x = xScale(w);
+  ax.append(sv('line', { x1: x(XMIN), x2: x(XMAX), y1: 2, y2: 2, stroke: 'var(--axis)', 'stroke-width': 1 }));
+  const ticks = w < 260 ? [0.1, 1, 10, 100] : w < 380 ? [0.1, 0.5, 1, 5, 25, 100] : TICKS_ALL;
+  for (const t of ticks) {
+    ax.append(sv('line', { x1: x(t), x2: x(t), y1: 2, y2: 6, stroke: 'var(--axis)' }));
+    const tx = sv('text', { x: x(t), y: 18, 'text-anchor': 'middle', 'font-size': 10.5, fill: 'var(--text-muted)', style: 'font-variant-numeric:tabular-nums' });
+    tx.textContent = t + '×'; ax.append(tx);
+  }
+  const cap1 = sv('text', { x: x(1), y: 31, 'text-anchor': 'middle', 'font-size': 10, fill: 'var(--text-secondary)' });
+  cap1.textContent = '← lower risk · general population = 1× · higher risk →'; ax.append(cap1);
+  host.append(el('div', { class: 'faxis' }, el('div'), ax));
+}
+
+/* ---------- tooltip ---------- */
+const tip = $('#tooltip');
+function attachTip(node, getter) {
+  const show = (evt) => {
+    const d = getter();
+    tip.replaceChildren(
+      el('div', { class: 'tv', text: d.value }),
+      el('div', { class: 'tl' }, el('span', { class: 'tk', style: `background:${d.color}` }), d.label),
+      d.sub ? el('div', { class: 'ts', text: d.sub }) : null);
+    tip.style.display = 'block';
+    let cx, cy;
+    if (evt && evt.clientX != null && evt.type !== 'focus') { cx = evt.clientX; cy = evt.clientY; }
+    else { const r = node.getBoundingClientRect(); cx = r.left + r.width * 0.6; cy = r.bottom; }
+    const tw = tip.offsetWidth, th = tip.offsetHeight;
+    let left = cx + 14, top = cy + 14;
+    if (left + tw > innerWidth - 8) left = cx - tw - 14;
+    if (top + th > innerHeight - 8) top = cy - th - 14;
+    tip.style.left = Math.max(8, left) + 'px'; tip.style.top = Math.max(8, top) + 'px';
+  };
+  const hide = () => { tip.style.display = 'none'; };
+  node.addEventListener('pointermove', show);
+  node.addEventListener('pointerleave', hide);
+  node.addEventListener('focus', show);
+  node.addEventListener('blur', hide);
+}
+
+/* ---------- table view ---------- */
+function renderTable(all) {
+  const wrap = $('#table-wrap');
+  wrap.replaceChildren();
+  const tb = el('tbody');
+  for (const [dom, sel] of all) for (const r of sel) {
+    const s = r.stat || {};
+    tb.append(el('tr', {},
+      el('td', { text: DOMAINS[dom].short }), el('td', { text: r.label }),
+      el('td', { class: 'num', text: s.est != null ? `${s.m} ${fmt(s.est)}` : '—' }),
+      el('td', { class: 'num', text: s.lo != null ? `${fmt(s.lo)}–${fmt(s.hi)}` : '—' }),
+      el('td', { text: s.est != null ? CMP_TEXT[s.cmp] : '—' }),
+      el('td', { text: s.outcome || '' }),
+      el('td', {}, s.ref ? refNode(s.ref) : '')));
+  }
+  if (!tb.children.length) { wrap.append(el('p', { class: 'fempty', text: 'No factors selected.' })); return; }
+  wrap.append(el('table', { class: 'data' },
+    el('thead', {}, el('tr', {}, ...['Domain', 'Factor', 'Estimate', '95% CI', 'Comparator', 'Outcome', 'Source'].map(h => el('th', { text: h })))), tb));
+}
+
+/* ---------- flags, unquantified, refs ---------- */
+function renderSide(all) {
+  const flags = [];
+  for (const [dom, sel] of all) for (const r of sel) if (r.flag) flags.push(`${DOMAINS[dom].short}: ${r.flag}`);
+  $('#flags').hidden = !flags.length;
+  $('#flag-list').replaceChildren(...flags.map(f => el('li', { text: f })));
+
+  const unqBox = $('#unq'); unqBox.replaceChildren();
+  for (const [dom, sel] of all) {
+    const list = sel.filter(x => !x.stat || x.stat.est == null);
+    if (!list.length) continue;
+    unqBox.append(el('h3', { text: `${DOMAINS[dom].short}: selected but not quantified (${list.length})` }),
+      el('p', { style: 'margin:0;color:var(--text-secondary)', text: 'No defensible general-population figure exists for these, but several are among the strongest clinical warning signs. Weigh them in the formulation.' }),
+      el('ul', {}, list.map(x => el('li', {}, x.label, x.stat && x.stat.ref ? ' · ' : '', x.stat && x.stat.ref ? refNode(x.stat.ref) : ''))));
+  }
+
+  const ids = [];
+  for (const [, sel] of all) for (const r of sel) if (r.stat && r.stat.ref && !ids.includes(r.stat.ref)) ids.push(r.stat.ref);
+  const ol = $('#sel-refs');
+  ol.replaceChildren(...ids.map(id => { const R = REFS[id]; return el('li', {}, R ? R.full : id, R && R.url ? ' ' : '', R && R.url ? el('a', { href: R.url, target: '_blank', rel: 'noopener noreferrer', text: 'link' }) : ''); }));
+  $('#sel-refs-empty').hidden = ids.length > 0;
+}
+
+/* ---------- formulation summary ---------- */
+function summaryText(all, combos) {
+  const lines = ['SAFETY RISK FORMULATION AID (teaching tool; not a prediction instrument)', ''];
+  for (const [dom, sel] of all) {
+    const def = DOMAINS[dom], c = combos[dom];
+    lines.push(def.tileLabel.toUpperCase());
+    for (const g of def.groups) {
+      const items = sel.filter(x => x.group === g.key);
+      lines.push(`  ${g.title}: ${items.length ? items.map(x => x.label + (x.stat && x.stat.est != null ? ` [${x.stat.m} ${fmt(x.stat.est)}, ${CMP_TEXT[x.stat.cmp]}]` : '')).join('; ') : 'none selected'}`);
+    }
+    const fl = sel.filter(x => x.flag);
+    if (fl.length) lines.push(`  RED FLAGS: ${fl.map(x => x.flag).join('; ')}`);
+    lines.push(c.n ? `  Illustrative relative risk vs general population: ~${fmtX(c.mid)}x (range ${fmtX(c.low)}-${fmtX(c.high)}x; ${c.n} quantified factors; correlated factors damped).` : '  Illustrative relative risk: no quantified factors selected.');
+    lines.push(`  Baseline: ${def.baseline}`, '');
+  }
+  lines.push('Interpretation: relative associations from population studies; not a probability for this person. Formulate baseline vulnerability, acute change, means access, protective factors, and a safety plan (SAFE-T, C-SSRS, HCR-20 V3, Stanley-Brown, CALM).');
+  return lines.join('\n');
+}
+
+/* ---------- main update ---------- */
+let lastAll = [], lastCombos = {};
+function update(rebuild) {
+  if (rebuild) { buildPanels(); }
+  // sync item highlight
+  document.querySelectorAll('[data-wrap]').forEach(w => w.classList.toggle('on', state.checks.has(w.getAttribute('data-wrap'))));
+  document.querySelectorAll('.opt').forEach(o => { const i = o.querySelector('input'); o.classList.toggle('on', i.checked && i.value !== 'none'); });
+  const all = Object.keys(DOMAINS).map(d => [d, collect(d)]);
+  const combos = {};
+  for (const [dom, sel] of all) {
+    combos[dom] = combine(sel);
+    renderTile(dom, sel, combos[dom]);
+    renderForest(dom, sel, combos[dom]);
+    const n = sel.length; $(`#count-${dom}`).textContent = n ? `(${n})` : '';
+  }
+  renderSide(all);
+  if (!$('#table-wrap').hidden) renderTable(all);
+  lastAll = all; lastCombos = combos;
+}
+
+/* ---------- controls ---------- */
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(x => x.setAttribute('aria-selected', x === t ? 'true' : 'false'));
+  document.querySelectorAll('.domain-panel').forEach(p => p.hidden = p.dataset.domain !== t.dataset.domain);
+}));
+$('#opt-clin').addEventListener('change', e => { state.includeClin = e.target.checked; update(); });
+$('#btn-table').addEventListener('click', e => {
+  const w = $('#table-wrap'); w.hidden = !w.hidden;
+  e.target.setAttribute('aria-expanded', String(!w.hidden));
+  e.target.textContent = w.hidden ? 'Show data table' : 'Hide data table';
+  if (!w.hidden) renderTable(lastAll);
+});
+$('#btn-reset').addEventListener('click', () => {
+  state.checks.clear(); state.choices = {}; state.sex = null; state.includeClin = false; $('#opt-clin').checked = false; update(true);
+});
+function loadExample() {
+  const ex = window.EXAMPLE || { checks: [], choices: {} };
+  state.checks = new Set(ex.checks); state.choices = { ...ex.choices };
+  state.sex = ex.sex || null; update(true);
+}
+$('#btn-example').addEventListener('click', loadExample);
+$('#btn-copy').addEventListener('click', async e => {
+  const txt = summaryText(lastAll, lastCombos);
+  try { await navigator.clipboard.writeText(txt); e.target.textContent = 'Copied ✓'; }
+  catch { const ta = el('textarea'); ta.value = txt; document.body.append(ta); ta.select(); document.execCommand('copy'); ta.remove(); e.target.textContent = 'Copied ✓'; }
+  setTimeout(() => e.target.textContent = 'Copy formulation summary', 1600);
+});
+$('#btn-theme').addEventListener('click', () => {
+  const r = document.documentElement;
+  const dark = r.dataset.theme ? r.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  r.dataset.theme = dark ? 'light' : 'dark';
+  update();
+});
+let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => update(), 120); });
+
+/* ---------- static content ---------- */
+$('#frameworks').replaceChildren(...(window.FRAMEWORKS || []).map(f => el('li', {}, el('strong', { text: f.name + ': ' }), f.text + ' ', f.ref ? refNode(f.ref) : '')));
+$('#foot').replaceChildren(window.FOOTER || '', ' ', el('a', { href: 'https://github.com/LordKelv/safety-risk-formulation', target: '_blank', rel: 'noopener noreferrer', text: 'Source and research notes on GitHub' }), '.');
+
+buildPanels();
+if (location.hash === '#example') loadExample(); else update();
+if (location.hash === '#example-others') { loadExample(); document.querySelector('#tab-others').click(); }
+})();
+</script>
+</body>
+</html>
